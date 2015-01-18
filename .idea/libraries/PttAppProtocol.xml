@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="PttAppProtocol">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../PttAppProtocol" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../PttAppProtocol/src" />
+    </SOURCES>
+  </library>
+</component>
