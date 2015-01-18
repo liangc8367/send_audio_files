@@ -75,15 +75,17 @@ public class Main {
 
 
         private void sendCallInit() {
-            mTxSeq = (short) (new Random()).nextInt();
-            CallInit preamble = new CallInit(mCallInfo.mTargetId, GlobalConstants.SUID_TRUNK_MANAGER);
-            preamble.setSequence(++mTxSeq);
-            ByteBuffer payload = ByteBuffer.allocate(preamble.getSize());
-            preamble.serialize(payload);
-            try {
-                mUdpService.send(mCallInfo.mSenderIpPort, payload);
-            } catch (Exception e){
-                LOGGER.warning(TAG + " exception in send:" + e);
+            if(mHasSignaling){
+                mTxSeq = (short) (new Random()).nextInt();
+                CallInit preamble = new CallInit(mCallInfo.mTargetId, GlobalConstants.SUID_TRUNK_MANAGER);
+                preamble.setSequence(++mTxSeq);
+                ByteBuffer payload = ByteBuffer.allocate(preamble.getSize());
+                preamble.serialize(payload);
+                try {
+                    mUdpService.send(mCallInfo.mSenderIpPort, payload);
+                } catch (Exception e){
+                    LOGGER.warning(TAG + " exception in send:" + e);
+                }
             }
 
             if (mInStream == null) {
@@ -111,14 +113,20 @@ public class Main {
                 return false;
             }
 
-            CallData callData = new CallData(
-                    mCallInfo.mTargetId,
-                    GlobalConstants.SUID_TRUNK_MANAGER,
-                    ++mAudioSeq,
-                    ByteBuffer.wrap(buffer, 0, sz));
-            callData.setSequence(++mTxSeq);
-            ByteBuffer payload = ByteBuffer.allocate(callData.getSize());
-            callData.serialize(payload);
+            ByteBuffer payload;
+
+            if( mHasSignaling ) {
+                CallData callData = new CallData(
+                        mCallInfo.mTargetId,
+                        GlobalConstants.SUID_TRUNK_MANAGER,
+                        ++mAudioSeq,
+                        ByteBuffer.wrap(buffer, 0, sz));
+                callData.setSequence(++mTxSeq);
+                payload = ByteBuffer.allocate(callData.getSize());
+                callData.serialize(payload);
+            } else {
+                payload = ByteBuffer.wrap(buffer);
+            }
             try {
                 mUdpService.send(mCallInfo.mSenderIpPort, payload);
             } catch (Exception e){
@@ -129,6 +137,7 @@ public class Main {
         }
 
         private void sendCallTerm() {
+
             if (mInStream != null) {
                 try {
                     mInStream.close();
@@ -137,17 +146,19 @@ public class Main {
                     LOGGER.warning(TAG + "error happened in close " + e);
                 }
             }
-            CallTerm callTerm = new CallTerm(
-                    mCallInfo.mTargetId,
-                    GlobalConstants.SUID_TRUNK_MANAGER
-            );
-            callTerm.setSequence(++mTxSeq);
-            ByteBuffer payload = ByteBuffer.allocate(callTerm.getSize());
-            callTerm.serialize(payload);
-            try {
-                mUdpService.send(mCallInfo.mSenderIpPort, payload);
-            } catch (Exception e) {
-                LOGGER.warning(TAG + " exception in send:" + e);
+            if(mHasSignaling) {
+                CallTerm callTerm = new CallTerm(
+                        mCallInfo.mTargetId,
+                        GlobalConstants.SUID_TRUNK_MANAGER
+                );
+                callTerm.setSequence(++mTxSeq);
+                ByteBuffer payload = ByteBuffer.allocate(callTerm.getSize());
+                callTerm.serialize(payload);
+                try {
+                    mUdpService.send(mCallInfo.mSenderIpPort, payload);
+                } catch (Exception e) {
+                    LOGGER.warning(TAG + " exception in send:" + e);
+                }
             }
 
         }
@@ -162,6 +173,8 @@ public class Main {
         static final String TAG = "EchoingCP: ";
         static final Logger LOGGER  = Logger.getLogger(UDPService.class.getName());
         static UDPService mUdpService;
+
+        boolean             mHasSignaling = false;
     }
 
     public static class CallInformation {
