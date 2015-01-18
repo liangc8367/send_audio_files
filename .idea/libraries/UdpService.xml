@@ -4,6 +4,8 @@
       <root url="jar://$PROJECT_DIR$/../UdpService/out/artifacts/UdpService_jar/UdpService.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../UdpService/src" />
+    </SOURCES>
   </library>
 </component>

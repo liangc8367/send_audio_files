@@ -19,7 +19,7 @@ public class Main {
 
 
 
-        Thread mThread = new Thread( new ExecutionHelper() ));
+        Thread mThread = new Thread( new ExecutionHelper() );
 
         mThread.run();
 
@@ -33,6 +33,13 @@ public class Main {
             UDPService.Configuration udpSvcConfig = new UDPService.Configuration();
             udpSvcConfig.addrLocal = new InetSocketAddress(GlobalConstants.TRUNK_CENTER_PORT);
             mUdpService = new UDPService(udpSvcConfig);
+            mUdpService.startService();
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e){
+                LOGGER.info(TAG + " exception in sleep");
+            }
+
 
             mCallInfo = new CallInformation();
             mCallInfo.mTargetId = 0x111;
@@ -122,11 +129,13 @@ public class Main {
         }
 
         private void sendCallTerm() {
-            try {
-                mInStream.close();
-                mInStream = null;
-            } catch (Exception e) {
-                LOGGER.warning(TAG + "error happened in close " + e);
+            if (mInStream != null) {
+                try {
+                    mInStream.close();
+                    mInStream = null;
+                } catch (Exception e) {
+                    LOGGER.warning(TAG + "error happened in close " + e);
+                }
             }
             CallTerm callTerm = new CallTerm(
                     mCallInfo.mTargetId,
@@ -135,9 +144,9 @@ public class Main {
             callTerm.setSequence(++mTxSeq);
             ByteBuffer payload = ByteBuffer.allocate(callTerm.getSize());
             callTerm.serialize(payload);
-            try{
+            try {
                 mUdpService.send(mCallInfo.mSenderIpPort, payload);
-            } catch (Exception e){
+            } catch (Exception e) {
                 LOGGER.warning(TAG + " exception in send:" + e);
             }
 
