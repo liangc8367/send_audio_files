@@ -116,16 +116,22 @@ public class Main {
             ByteBuffer payload;
 
             if( mHasSignaling ) {
+                ByteBuffer buf = ByteBuffer.wrap(buffer, 0, sz);
+                LOGGER.info("TX[" + (++mProtoCount) + "]:" +
+                        buf.getShort(2) + ":" + buf.getShort(3));
                 CallData callData = new CallData(
                         mCallInfo.mTargetId,
                         GlobalConstants.SUID_TRUNK_MANAGER,
                         ++mAudioSeq,
-                        ByteBuffer.wrap(buffer, 0, sz));
+                        buf);
                 callData.setSequence(++mTxSeq);
                 payload = ByteBuffer.allocate(callData.getSize());
                 callData.serialize(payload);
             } else {
                 payload = ByteBuffer.wrap(buffer);
+                LOGGER.info("TX[" + (++mProtoCount) + "]:" +
+                    payload.getShort(2) + ":" + payload.getShort(3) + "==>" +
+                        buffer[4] + ":" + buffer[5]);
             }
             try {
                 mUdpService.send(mCallInfo.mSenderIpPort, payload);
@@ -149,7 +155,8 @@ public class Main {
             if(mHasSignaling) {
                 CallTerm callTerm = new CallTerm(
                         mCallInfo.mTargetId,
-                        GlobalConstants.SUID_TRUNK_MANAGER
+                        GlobalConstants.SUID_TRUNK_MANAGER,
+                        ++mAudioSeq
                 );
                 callTerm.setSequence(++mTxSeq);
                 ByteBuffer payload = ByteBuffer.allocate(callTerm.getSize());
@@ -166,15 +173,17 @@ public class Main {
         CallInformation     mCallInfo;
         short               mTxSeq;
         short               mAudioSeq = 0;
+        short               mProtoCount = 0;
 
         BufferedInputStream  mInStream;
+        UDPService mUdpService;
+
         static final String AUDIO_FILE_NAME = "audio.amr";
         static final String AMR_FILE_HEADER_SINGLE_CHANNEL = "#!AMR\n";
         static final String TAG = "EchoingCP: ";
         static final Logger LOGGER  = Logger.getLogger(UDPService.class.getName());
-        static UDPService mUdpService;
 
-        boolean             mHasSignaling = false;
+        boolean             mHasSignaling = true;
     }
 
     public static class CallInformation {
