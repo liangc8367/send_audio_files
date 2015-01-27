@@ -41,28 +41,38 @@ public class Main {
             }
 
 
+            long time_first = System.nanoTime();
             mCallInfo = new CallInformation();
             mCallInfo.mTargetId = 0x111;
             mCallInfo.mSenderIpPort = new InetSocketAddress("192.168.0.104", 32001);
 
             for(int i=0; i<3; ++i){
+                long time_prior_send = System.nanoTime();
                 sendCallInit();
+                long time_now = System.nanoTime();
+
                 try {
-                    Thread.sleep(GlobalConstants.CALL_PACKET_INTERVAL);
+                    Thread.sleep(
+                            (GlobalConstants.CALL_PACKET_INTERVAL *(i+1) - (time_now - time_first)/(1000*1000)));
                 } catch (Exception e){
                     LOGGER.info(TAG + " exception in sleep");
                 }
             }
 
+            int i = 3;
             while(sendCallData()){
+                long time_now = System.nanoTime();
                 try {
-                    Thread.sleep(GlobalConstants.CALL_PACKET_INTERVAL);
+                    Thread.sleep(
+                            (GlobalConstants.CALL_PACKET_INTERVAL * (i+1) - (time_now - time_first)/(1000*1000)));
                 } catch (Exception e){
                     LOGGER.info(TAG + " exception in sleep");
                 }
+
+                ++i;
             }
 
-            for(int i=0; i<3; ++i){
+            for(int j=0; j<3; ++j){
                 sendCallTerm();
                 try {
                     Thread.sleep(GlobalConstants.CALL_PACKET_INTERVAL);
